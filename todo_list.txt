@@ -1,0 +1,8 @@
+- Agregar funcionalidad a los botones de editar/borra en cargar stock/venta DONE FALTA VENTA
+- Redireccionar una vez que hago la carga de la venta/stock DONE FALTA VENTA
+- EN carga stock reiniciar el formulario una vez que agrego el item DONE
+- No dejar cargar mas de una vez el mismo codigo en stock
+- Agregar funcionalidad de crear promos (Con generacion de codigos de barra)
+- Agregar lista de ventas (Suma de ventas por dia)
+- Agregar validacion a forms
+- Agregar mensajes de error

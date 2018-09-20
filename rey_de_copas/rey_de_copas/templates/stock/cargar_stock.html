@@ -1,0 +1,214 @@
+{% extends "stock/base_stock.html" %}
+{% block title %}Cargar Stock{% endblock title %}
+{% block content %}
+{% include "nav.html" %}
+{% block producto %}
+<div class="wrapper">
+      <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+         <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Cargar Stock
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="#"><i class="fa fa-dashboard"></i>Inicio</a></li>
+            <li class="active">Cargar Stock</li>
+          </ol>
+        </section>
+        <!-- Main content -->
+    <section class="content">
+      <!-- START ALERTS AND CALLOUTS -->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="box box-info">
+            <div class="box-header with-border">
+
+              <div class="row">
+                <div class="col-lg-12">
+                <a href="javascript:history.go(-1);" class="btn btn-success">
+                      <span class="glyphicon glyphicon-chevron-left"></span> Regresar
+                </a>
+
+                <div class="box-tools pull-right">
+                    <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                </div><!-- /.box-tools -->
+              </div><!-- col -->
+              </div> <!-- row -->
+
+              <div class="row">
+                      <div class="col-lg-12">
+                        <form class="form-horizontal" id="form-cargar-stock" action="javascript:myFunction(); return false;">
+                            <!-- {% csrf_token %} -->
+                            <div class="row">
+
+                                <div class="col-xs-12 col-sm-10">
+
+                                    <div class="form-group has-success has-feedback  {% if form.codigo.errors %} has-error {% endif %}">
+                                        <label class="control-label col-sm-2" for="inputSuccess3">{{ form.codigo.label_tag }}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" name="codigo" class="form-control" id="codigo_form" data-toggle="tooltip" data-placement="top" title='{{ form.codigo.errors.as_text}}' autofocus='true' >
+                                        </div>
+                                    </div>
+
+
+                                </div> <!-- col -->
+                            </div> <!--<div class="row"> -->
+                        </form>
+                      </div>
+                    </div><!--/.row-->
+
+
+
+            </div><!-- /.box-header -->
+              <div class="box-body">
+                <table id="tabla_stock" class="table table-bordered table-striped">
+                    <thead>
+                     <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Cantidad</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!---
+                     {% for mercaderia in mercaderias %}
+
+                        <tr>
+                          <td>{{ mercaderia.codigo}}</td>
+                          <td>{{ mercaderia.descripcion }}</td>
+                          <td>{{ mercaderia.unidades_por_caja }}</td>
+                          <td class="text-right">
+                                  <a href="{{ mercaderia.get_update_url }}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span></a>
+                                  <a href="{{ mercaderia.get_delete_url }}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></a>
+                            </td>
+
+                          </tr>
+                      {% endfor %}
+                    -->
+                    </tbody>
+
+                  </table>
+
+                <div class="panel-footer color-footer" id="footer_pagina">
+                  <button class="btn btn-primary" id="save_button">
+                               Grabar
+                  </button>
+                </div>
+            </div><!-- /.box body -->
+          </div><!-- /.box info -->
+          </div><!--col-->
+        </div><!-- /.row -->
+    </section><!-- /.content -->
+  </div><!-- /.content-wrapper -->
+{% include "footer.html" %}
+ {% endblock producto %}
+{% endblock content %}
+{% block js %}
+    {{ block.super }}
+    <script>
+        $(document).ready(function() {
+            var edicion_prev_val;
+            // Logica para cargar stock en el form
+            $("#codigo_form").change(function(){
+                var codigo_from_form = $("#codigo_form").val();
+                var url = "/stock/mercaderia_by_codigo/" + codigo_from_form + "/"
+                $.get(url, function(data, status){
+                  if(data.length == 0){
+                    alert("Código no encontrado. Agregar la mercaderia a la Base de datos");
+                    $("#codigo_form").val("");
+                  }
+                  else {
+                    $("#tabla_stock tbody").append(data);
+                    $("#codigo_form").val("");
+                  }
+                });
+            });
+
+            //Botton Borrar columna
+            $("#tabla_stock").on("click","div.btn-eliminar" ,function(){
+              $(this).parent().parent().remove();
+            });
+
+            //Boton editar columna
+            $("#tabla_stock").on("click","div.btn-editar" ,function(){
+              var input_el = '<input type="text" class="form-control" value="OLD"> ';
+              var btns_el = `<div class="btn btn-success btn-ed-ok"><span class="glyphicon glyphicon-ok"></span></div>
+                             <div class="btn btn-danger btn-ed-volver"><span class="glyphicon glyphicon-remove"></span></div>`;
+              var col_cantidad = $(this).parent().prev();
+              edicion_prev_val = $(this).parent().parent().children("td.stock_item_cant").text();
+              input_el = input_el.replace("OLD", edicion_prev_val);
+
+              col_cantidad.html(input_el);
+              $(this).parent().html(btns_el);
+
+            });
+
+            // Edicion boton confirmar edicion
+            $("#tabla_stock").on("click","div.btn-ed-ok" ,function(){
+                var btns_el = `<div class="btn btn-warning btn-editar"><span class="glyphicon glyphicon-pencil"></span></div>
+                               <div class="btn btn-danger btn-eliminar"><span class="glyphicon glyphicon-trash"></span></div>`;
+                var cantidad_col = $(this).parent().prev();
+                var cantidad = cantidad_col.children().first().val();
+
+                cantidad_col.html(cantidad);
+                $(this).parent().html(btns_el);
+
+            });
+
+
+            // Edicion boton descartar edicion
+            $("#tabla_stock").on("click","div.btn-ed-volver" ,function(){
+                var btns_el = `<div class="btn btn-warning btn-editar"><span class="glyphicon glyphicon-pencil"></span></div>
+                               <div class="btn btn-danger btn-eliminar"><span class="glyphicon glyphicon-trash"></span></div>`;
+                var cantidad_col = $(this).parent().prev();
+
+                cantidad_col.html(edicion_prev_val);
+                $(this).parent().html(btns_el);
+            });
+
+            // Logica para grabar
+            $("#save_button").click(function(){
+                var i;
+                var codigos = [];
+                var cantidades = [];
+
+                var codigos_sel = $("td.stock_item_cod");
+                var cantidades_sel = $("td.stock_item_cant");
+
+
+                for(i = 0; i < codigos_sel.length; i++){
+                  codigos.push(codigos_sel[i].innerHTML);
+                }
+
+                for(i = 0; i < cantidades_sel.length; i++){
+                  cantidades.push(cantidades_sel[i].innerHTML);
+                }
+
+
+                $.ajax({
+                    url : $(this).attr("href"),
+                    type: "POST",
+                    data :
+                      {
+                        csrfmiddlewaretoken: getCookie("csrf_token"),
+                        codigos: codigos,
+                        cantidades: cantidades
+                      },
+                    //dataType : "json",
+                    success: function( data ){
+                        // do something
+                        $("#save_button").hide();
+                        $("#footer_pagina").append('<h5> Stock cargado correctamente!</h5>');
+                    }
+                });
+            });
+
+
+        });
+
+    // TODO: Evitar que se pueda agregar mas de una vez el mismo codigo
+    // TODO: Agregar funcionalidad de editar y borrar la fila
+    </script>
+{% endblock js%}

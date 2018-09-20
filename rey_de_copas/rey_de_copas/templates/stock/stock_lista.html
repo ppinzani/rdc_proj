@@ -1,0 +1,132 @@
+{% extends "stock/base_stock_lista.html" %}
+{% block title %}Stock{% endblock title %}
+{% block content %}
+{% include "nav.html" %}
+{% block producto %}
+    <div class="wrapper">
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Stock
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href=""><i class="fa fa-dashboard"></i>Inicio</a></li>
+            <li class="active">Stock</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+          <div class="row">
+            <div class="col-xs-12">
+
+                <div class="box box-primary">
+                  <div class="box-header with-border">
+                    <div class="box-tools pull-right">
+                      <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                    </div><!-- /.box-tools -->
+                  </div><!-- /.box-header -->
+                  <div class="box-body">
+                  <table id="tabla-stock" class="table table-bordered table-striped">
+                    <thead>
+                     <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Stock</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+
+                     {% for item in stock_items %}
+
+                        <tr>
+                          <td>{{ item.mercaderia.codigo}}</td>
+                          <td>{{ item.mercaderia.descripcion }}</td>
+                          <td>{{ item.stock }}</td>
+                          <td class="text-right">
+                              <div  class="btn btn-warning btn-editar"><span class="glyphicon glyphicon-pencil"></span></div>
+                          </td>
+
+                          </tr>
+                      {% endfor %}
+                    </tbody>
+
+                  </table>
+                </div><!-- /.box-body -->
+              </div><!-- /.box -->
+            </div><!-- /.col -->
+          </div><!-- /.row -->
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+      <footer class="main-footer">
+{% include "footer.html" %}
+ {% endblock producto %}
+{% endblock content %}
+{% block js %}
+    {{ block.super }}
+    <script>
+        $(document).ready(function() {
+            var edicion_prev_val;
+
+            //Boton editar columna
+            $("#tabla-stock").on("click","div.btn-editar" ,function(){
+              var input_el = '<input type="text" class="form-control" value="OLD"> ';
+              var btns_el = `<div class="btn btn-success btn-ed-ok"><span class="glyphicon glyphicon-ok"></span></div>
+                             <div class="btn btn-danger btn-ed-volver"><span class="glyphicon glyphicon-remove"></span></div>`;
+              var col_cantidad = $(this).parent().prev();
+              edicion_prev_val = col_cantidad.text();
+              input_el = input_el.replace("OLD", edicion_prev_val);
+
+              col_cantidad.html(input_el);
+              $(this).parent().html(btns_el);
+
+            });
+
+            // Edicion boton confirmar edicion
+            $("#tabla-stock").on("click","div.btn-ed-ok" ,function(){
+                var btns_el = '<div class="btn btn-warning btn-editar"><span class="glyphicon glyphicon-pencil"></span></div>';
+                var cantidad_col = $(this).parent().prev();
+                var cantidad = [cantidad_col.children().first().val()];
+                var codigo = [$(this).parent().prev().prev().prev().text()];
+                var acciones_col = $(this).parent();
+
+                $.ajax({
+                    url : "{% url 'stock:cargar' %}",
+                    type: "POST",
+                    data :
+                      {
+                        csrfmiddlewaretoken: getCookie("csrf_token"),
+                        codigos: codigo,
+                        cantidades: cantidad,
+                        editar: true
+                      },
+                    //dataType : "json",
+                    success: function( data ){
+                        // do something
+                        cantidad_col.html(cantidad);
+                        acciones_col.html(btns_el);
+                    }
+                });
+            });
+
+
+            // Edicion boton descartar edicion
+            $("#tabla-stock").on("click","div.btn-ed-volver" ,function(){
+                var btns_el = `<div class="btn btn-warning btn-editar"><span class="glyphicon glyphicon-pencil"></span></div>
+                               <div class="btn btn-danger btn-eliminar"><span class="glyphicon glyphicon-trash"></span></div>`;
+                var cantidad_col = $(this).parent().prev();
+                console.log($(this).parent().prev().html());
+
+                cantidad_col.html(edicion_prev_val);
+                $(this).parent().html(btns_el);
+            });
+
+        });
+
+    // TODO: Evitar que se pueda agregar mas de una vez el mismo codigo
+    // TODO: Agregar funcionalidad de editar y borrar la fila
+    </script>
+{% endblock js%}
