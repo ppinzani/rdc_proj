@@ -1,5 +1,4 @@
 import json
-import io
 
 from django.shortcuts import render
 from django.views.generic import ListView, UpdateView, DeleteView
@@ -10,9 +9,7 @@ from django.forms import formset_factory
 from django.shortcuts import get_object_or_404, redirect, reverse
 from django.db import IntegrityError, transaction
 from django.contrib import messages
-from django.http import FileResponse
 
-from reportlab.pdfgen import canvas
 
 from .models import Mercaderia
 from .models import DetallePromo, Promo
