@@ -95,15 +95,15 @@ class Promo(models.Model):
         return reverse('mercaderias:detalle_promo', args=(self.id,))
 
     def get_detalle(self):
-        detalles = DetallePromo.objects.filter(promo=self)
+        detalles = self.detallepromo_set.all()
         s = " + ".join(map(str, detalles))
         return u"%s" % s
 
-    def get_barcode_image_url(self):
-        name = self.nombre.replace(" ", "_") if self.nombre != "" else\
-               datetime.now().strftime('%d%m%Y-%I%M%p')
+    def get_detalle_full(self):
+        return f"{self.nombre}({self.get_detalle()})"
 
-        return f"{settings.MEDIA_URL}barcodes/{name}.svg"
+    def get_barcode_image_url(self):
+        return f"{settings.MEDIA_URL}barcodes/{self.codigo}.svg"
 
     def get_barcode_location(self):
         return self.get_barcode_image_url().replace(settings.MEDIA_URL, settings.MEDIA_ROOT + "/")
@@ -118,9 +118,15 @@ class Promo(models.Model):
         if not default_storage.exists(image_filepath):
             self.create_barcode_image()
 
+    def delete(self, *args, **kwargs):
+        image_location = self.get_barcode_location()
+        if default_storage.exists(image_location):
+            default_storage.delete(image_location)
+        return super(Promo, self).delete(*args, **kwargs)
+
 
 class DetallePromo(models.Model):
-    cantidad = models.PositiveSmallIntegerField()
+    cantidad = models.PositiveSmallIntegerField(blank=True)
     mercaderia = models.ForeignKey(
         'mercaderias.Mercaderia',
         on_delete=models.SET_NULL,

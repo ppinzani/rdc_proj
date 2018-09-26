@@ -1,5 +1,5 @@
 from django import forms
-from dal import autocomplete
+from django.forms import BaseFormSet
 
 from .models import Mercaderia
 from .models import Promo, DetallePromo
@@ -56,12 +56,28 @@ class DetallePromoForm(forms.ModelForm):
 
     mercaderia = forms.CharField(label="Descripcion",
                              max_length=200,
+                             required=False,
                              widget=forms.TextInput(
                                  attrs={
                                      'class': "form-control",
                                      'readonly': True,
                                  }
                              ))
+
+    def fields_required(self, fields):
+        """Used for conditionally marking fields as required."""
+        for field in fields:
+            if not self.cleaned_data.get(field, ''):
+                msg = forms.ValidationError("Este campo no puede ser nulo.")
+                self.add_error(field, msg)
+
+    def clean(self):
+        mercaderia = self.cleaned_data.get('mercaderia')
+
+        if mercaderia:
+            self.fields_required(['cantidad'])
+
+        return self.cleaned_data
 
 
 class PromoForm(forms.ModelForm):

@@ -1,0 +1,23 @@
+{% extends "mercaderias/base_mercaderias.html" %}
+{% block title %}Promos: Codigos de Barra{% endblock title %}
+{% block content %}
+{% for promo in promos %}
+    {% if forloop.counter0|divisibleby:4 %} <div class="row"> {% endif %}
+    <div class="col-md-3"  style="margin-top:30px;" >
+        <table>
+            <tbody>
+            <tr>
+                <td>
+                    <div align="center"><img src="{{ promo.get_barcode_image_url }}" width="232" height="128"></div>
+                </td>
+            </tr>
+            <tr>
+                <td align="center"> <h4> {{ promo.nombre }} </h4> </td>
+            </tr>
+            </tbody>
+        </table>
+
+    </div> <!-- Col -->
+    {% if forloop.counter1|divisibleby:4 or forloop.last %} </div> {% endif %}
+{% endfor %}
+{% endblock content %}

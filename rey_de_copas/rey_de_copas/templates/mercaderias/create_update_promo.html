@@ -48,14 +48,14 @@
 
                     <div class="row">
                       <div class="col-lg-12">
-                                <div class="form-group has-success has-feedback">
+                                <div class="form-group has-success has-feedback {% if promo_form.nombre.errors %} has-error {% endif %}">
                                     <label class="control-label col-sm-2" for="inputSuccess3"> {{ promo_form.nombre.label_tag }} </label>
                                     <div class="col-sm-6">
                                         {{ promo_form.nombre }}
                                     </div> <!-- col -->
                                 </div>
 
-                                <div class="form-group has-success has-feedback">
+                                <div class="form-group has-success has-feedback {% if promo_form.precio.errors %} has-error {% endif %}">
                                     <label class="control-label col-sm-2" for="inputSuccess3"> {{ promo_form.precio.label_tag }} </label>
                                     <div class="col-sm-6">
                                         {{ promo_form.precio }}
@@ -94,7 +94,10 @@
 
                               <tr class = "{% if forloop.first %} hidden{% endif %} dynamic-form" id="{{ form.prefix }}-row">
                                 <td>{{ form.mercaderia }}</td>
-                                <td>{{ form.cantidad }}</td>
+                                <td>
+                                  {{ form.cantidad }}
+                                  {{ form.cantidad.errors }}
+                                </td>
                                 <td class="text-right">
                                         <div class="btn btn-danger eliminar-row"><span class="glyphicon glyphicon-trash"></span></div>
                                 </td>
@@ -104,6 +107,18 @@
 
                         </table>
                         {{ formset.management_form }}
+                        {% if detalle_formset.non_form_errors %}
+                          {% for error in detalle_formset.non_form_errors %}
+                              {{ error|escape }}
+                          {% endfor %}
+                        {% endif %}
+
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                <p>{{ message }}</p>
+                            {% endfor %}
+                        {% endif %}
                       </div> <!--col -->
                     </row> <!-- row -->
 
@@ -131,7 +146,6 @@
     <!-- Dynamic formset -->
     <script src="/static/js/dynamic_formset.js"></script>
 
-  </script>
 
   <script>
     $(document).ready(function() {
@@ -142,7 +156,12 @@
               submitted_mercaderia = $("#myInput").val();
               if(options.includes(submitted_mercaderia)){
                 $("#myInput").val("");
-                return addForm('form', submitted_mercaderia);
+
+                addForm('form');
+
+                var crntIndex = parseInt($('#id_form-TOTAL_FORMS').val()) - 1;
+                $("#id_form-" + crntIndex + "-mercaderia").val(submitted_mercaderia);
+                return false;
               }
               else{
                 $("#myInput").val("");

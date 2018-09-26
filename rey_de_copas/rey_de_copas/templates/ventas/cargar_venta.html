@@ -36,16 +36,21 @@
               </div><!-- col -->
               </div> <!-- row -->
 
-              <div class="row">
+
+             </div><!-- /.box-header -->
+
+              <div class="box-body">
+
+                <div class="row">
                       <div class="col-lg-12">
                             <!-- {% csrf_token %} -->
                             <div class="row">
 
                                 <div class="col-xs-12 col-sm-10">
-                                    <div class="form-group has-success has-feedback  {% if form.codigo.errors %} has-error {% endif %}">
+                                    <div class="form-group has-success has-feedback ">
                                         <label class="control-label col-sm-2" for="inputSuccess3">Código de Barras</label>
                                         <div class="col-sm-6">
-                                            <input type="text" name="codigo" class="form-control" id="codigo_form" data-toggle="tooltip" data-placement="top" autofocus='true' >
+                                            <input type="text" name="barcode" class="form-control" id="codigo_form" data-toggle="tooltip" data-placement="top" autofocus='true' >
                                         </div>
                                     </div>
 
@@ -54,45 +59,52 @@
                             </div> <!--<div class="row"> -->
                       </div>
               </div><!--/.row-->
-             </div><!-- /.box-header -->
 
-              <div class="row">
-              <div class="box-body">
-                <table id="tabla_venta" class="table table-bordered">
-                    <thead>
-                     <tr>
-                        <th>Código</th>
-                        <th>Cantidad</th>
-                        <th>Descripción</th>
-                        <th>Precio Unitario</th>
-                        <th>Subtotal</th>
-                        <th>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <!---
-                     {% for mercaderia in mercaderias %}
+              <form class="form-horizontal" method="post">
+              {% csrf_token %}
+              <div class="row" style="margin-top: 30px">
+                <div class="col-md-12" >
+                  <table id="tabla_venta" class="table table-bordered">
+                      <colgroup>
+                        <col class="col-md-2">
+                        <col class="col-md-1">
+                        <col class="col-md-5">
+                        <col class="col-md-2">
+                        <col class="col-md-1">
+                        <col class="col-md-1">
+                      </colgroup>
+                      <thead>
+                       <tr>
+                          <th>Código</th>
+                          <th>Cantidad</th>
+                          <th>Descripción</th>
+                          <th>Precio Unitario</th>
+                          <th>Subtotal</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                         {% for form in formset %}
 
-                        <tr>
-                          <td>{{ mercaderia.codigo}}</td>
-                          <td>{{ mercaderia.descripcion }}</td>
-                          <td>{{ mercaderia.precio_compra }}</td>
-                          <td>{{ mercaderia.precio_venta }}</td>
-                          <td>{{ mercaderia.unidades_por_caja }}</td>
-                          <td class="text-right">
-                                  <a href="{{ mercaderia.get_update_url }}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span></a>
-                                  <a href="{{ mercaderia.get_delete_url }}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></a>
-                            </td>
+                              <tr class = "{% if forloop.first %} hidden {% endif %} dynamic-form" id="{{ form.prefix }}-row">
+                                <td>{{ form.codigo }}</td>
+                                <td>{{ form.cantidad }}</td>
+                                <td>{{ form.detalle }} </td>
+                                <td>{{ form.precio_unitario }}</td>
+                                <td> <p class="detalle_subt" id="id_{{ form.prefix }}-subtotal"> </p></td>
+                                <td class="text-right">
+                                        <div class="btn btn-danger eliminar-row"><span class="glyphicon glyphicon-trash"></span></div>
+                                </td>
+                              </tr>
+                            {% endfor %}
+                      </tbody>
 
-                          </tr>
-                      {% endfor %}
-                    -->
-                    </tbody>
-
-                  </table>
+                    </table>
+                    {{ formset.management_form }}
+                  </div> <!-- Col -->
                 </div> <!-- Row -->
 
-                  <div class="row">
+                  <div class="row" style="margin-top: 15px">
                   <div class="col-xs-6">
                   </div>
                   <div class="col-xs-6">
@@ -110,10 +122,11 @@
                 </div>
 
                 <div class="panel-footer color-footer">
-                  <button class="btn btn-primary" id="save_button">
+                  <button type="submit" class="btn btn-primary" id="save_button">
                                Grabar
                   </button>
                 </div>
+                </form>
             </div><!-- /.box body -->
           </div><!-- /.box info -->
           </div><!--col-->
@@ -125,13 +138,18 @@
 {% endblock content %}
 {% block js %}
     {{ block.super }}
+
+    <!-- Dynamic formset -->
+    <script src="/static/js/dynamic_formset.js"></script>
+
+
     <script>
         function calcular_total(){
           var i;
           var total = 0.0;
-          var subtotales_sel = $("td.detalle_subt");
+          var subtotales_sel = $("p.detalle_subt");
 
-          for(i = 0; i < subtotales_sel.length; i++){
+          for(i = 1; i < subtotales_sel.length; i++){
             total += parseFloat(subtotales_sel[i].innerHTML);
           }
 
@@ -139,120 +157,79 @@
         }
 
         $(document).ready(function() {
-            var cantidad_prev_val;
-            var precio_prev_val;
 
             // Logica para cargar stock en el form
             $("#codigo_form").change(function(){
                 var codigo_from_form = $("#codigo_form").val();
-                var url = "/ventas/detalle_by_codigo/" + codigo_from_form + "/"
+                var url = "/ventas/detalle_by_codigo/" + codigo_from_form + "/";
+
                 $.get(url, function(data, status){
                   if(data.length == 0){
                     alert("Código no encontrado. Agregar la mercaderia a la Base de datos");
+                    $("#codigo_form").val("");
                   }
                   else {
-                    $("#tabla_venta tbody").append(data);
+                    addForm('form');
+                    var my_data = JSON.parse(data);
+                    var crntIndex = parseInt($('#id_form-TOTAL_FORMS').val()) - 1;
+
+                    // Set form fields
+                    $("#id_form-" + crntIndex + "-codigo").val(my_data["codigo"]);
+                    $("#id_form-" + crntIndex + "-cantidad").val(my_data["cantidad"]);
+                    $("#id_form-" + crntIndex + "-detalle").val(my_data["descripcion"]);
+                    $("#id_form-" + crntIndex + "-precio_unitario").val(my_data["precio_unitario"]);
+                    $("p#id_form-" + crntIndex + "-subtotal").text(my_data["precio_unitario"]);
+
                     calcular_total();
-                     $("#codigo_form").val("");
+
+                    $("#codigo_form").val("");
                   }
+
                 });
+            });
+
+            $("#tabla_venta").on("change", ".precio-unitario", function(){
+              var prefix = $(this).attr("id").replace("precio_unitario","");
+              var subtotal = $(this).val() * $("#" + prefix + "cantidad").val();
+
+              $("p#" + prefix + "subtotal").text(subtotal.toFixed(2));
+            });
+
+            $("#tabla_venta").on("keypress", ".precio-unitario", function(event){
+                if (event.keyCode == 13) {
+                    event.preventDefault();
+                    var prefix = $(this).attr("id").replace("precio_unitario","");
+                    var subtotal = $(this).val() * $("#" + prefix + "cantidad").val();
+
+                    $("p#" + prefix + "subtotal").text(subtotal.toFixed(2));
+                }
+            });
+
+            $("#tabla_venta").on("change", ".cantidad", function(){
+              var prefix = $(this).attr("id").replace("cantidad","");
+              var subtotal = $(this).val() * $("#" + prefix + "precio_unitario").val();
+
+              $("p#" + prefix + "subtotal").text(subtotal.toFixed(2));
+            });
+
+            $("#tabla_venta").on("keypress", ".cantidad", function(event){
+                if (event.keyCode == 13) {
+                    event.preventDefault();
+                    var prefix = $(this).attr("id").replace("cantidad","");
+                    var subtotal = $(this).val() * $("#" + prefix + "precio_unitario").val();
+
+                    $("p#" + prefix + "subtotal").text(subtotal.toFixed(2));
+                }
             });
 
             //Botton Borrar columna
-            $("#tabla_venta").on("click","div.btn-eliminar" ,function(){
-              $(this).parent().parent().remove();
+            $("#tabla_venta").on("click","div.eliminar-row" ,function(){
+              deleteForm(this, "form");
               calcular_total();
             });
 
-            //Boton editar columna
-            $("#tabla_venta").on("click","div.btn-editar" ,function(){
-              var input_el = '<input type="text" class="form-control" value="OLD"> ';
-              var btns_el = `<div class="btn btn-success btn-ed-ok"><span class="glyphicon glyphicon-ok"></span></div>
-                             <div class="btn btn-danger btn-ed-volver"><span class="glyphicon glyphicon-remove"></span></div>`;
-              var col_precio = $(this).parent().parent().children("td.detalle_pu");
-              var col_cantidad = $(this).parent().parent().children("td.detalle_cant");
 
-              precio_prev_val = col_precio.text();
-              cantidad_prev_val = col_cantidad.text();
-
-              precio_input_el = input_el.replace("OLD", precio_prev_val);
-              cantidad_input_el = input_el.replace("OLD", cantidad_prev_val);
-
-              col_precio.html(precio_input_el);
-              col_cantidad.html(cantidad_input_el);
-              $(this).parent().html(btns_el);
-
-            });
-
-
-            //Boton descartar cambios
-            $("#tabla_venta").on("click","div.btn-ed-volver" ,function(){
-                var btns_el = `<div class="btn btn-warning btn-editar"><span class="glyphicon glyphicon-pencil"></span></div>
-                               <div class="btn btn-danger btn-eliminar"><span class="glyphicon glyphicon-trash"></span></div>`;
-
-                var col_precio = $(this).parent().parent().children("td.detalle_pu");
-                var col_cantidad = $(this).parent().parent().children("td.detalle_cant");
-
-                col_cantidad.html(cantidad_prev_val);
-                col_precio.html(precio_prev_val);
-                $(this).parent().html(btns_el);
-            });
-
-
-            //Boton guardaar cambios
-            $("#tabla_venta").on("click","div.btn-ed-ok" ,function(){
-                var btns_el = `<div class="btn btn-warning btn-editar"><span class="glyphicon glyphicon-pencil"></span></div>
-                               <div class="btn btn-danger btn-eliminar"><span class="glyphicon glyphicon-trash"></span></div>`;
-
-                var col_precio = $(this).parent().parent().children("td.detalle_pu");
-                var col_cantidad = $(this).parent().parent().children("td.detalle_cant");
-                var col_subtotal = $(this).parent().parent().children("td.detalle_subt");
-
-                var new_precio = parseFloat(col_precio.children().first().val()).toFixed(2);
-                var new_cantidad = parseInt(col_cantidad.children().first().val());
-                var new_subtotal = (new_precio * new_cantidad).toFixed(2);
-
-                col_cantidad.html(new_cantidad);
-                col_precio.html(new_precio);
-                col_subtotal.html(new_subtotal);
-                calcular_total();
-
-                $(this).parent().html(btns_el);
-            });
-
-            // Logica para grabar
-            $("#save_button").click(function(){
-                var i;
-                var strings = [];
-
-                var codigos_sel = $("td.detalle_cod");
-                var cantidades_sel = $("td.detalle_cant");
-                var pu_sel = $("td.detalle_pu");
-
-
-                for(i = 0; i < codigos_sel.length; i++){
-                  strings.push(codigos_sel[i].innerHTML + " " + cantidades_sel[i].innerHTML + " " + pu_sel[i].innerHTML);
-                }
-
-
-                $.ajax({
-                    url : $(this).attr('href'),
-                    type: "POST",
-                    data :
-                      {
-                        csrfmiddlewaretoken: getCookie('csrf_token'),
-                        strings: strings
-                      },
-                    dataType : "json",
-                    success: function( data ){
-                        // do something
-                        alert("Success!");
-                    }
-                });
-            });
         });
 
-    // TODO: Evitar que se pueda agregar mas de una vez el mismo codigo
-    // TODO: Agregar funcionalidad de editar y borrar la fila
     </script>
 {% endblock js%}

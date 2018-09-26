@@ -1,5 +1,5 @@
 {% extends "ventas/base_ventas_lista.html" %}
-{% block title %}Lista de Precios{% endblock title %}
+{% block title %} Ventas{% endblock title %}
 {% block content %}
 {% include "nav.html" %}
 {% block producto %}
@@ -9,11 +9,11 @@
         <!-- Content Header (Page header) -->
         <section class="content-header">
           <h1>
-            Lista de Precios
+            Ventas
           </h1>
           <ol class="breadcrumb">
             <li><a href=""><i class="fa fa-dashboard"></i>Inicio</a></li>
-            <li class="active">Lista de Precios</li>
+            <li class="active"> Ventas </li>
           </ol>
         </section>
 
@@ -28,43 +28,29 @@
                       <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
                     </div><!-- /.box-tools -->
                   </div><!-- /.box-header -->
+
                   <div class="box-body">
-                  <table id="example1" class="table table-bordered table-striped">
+                  <table class="table table-bordered table-striped">
                     <thead>
                      <tr>
-                        <th>Código</th>
-                        <th>Descripción</th>
-                        <th>Precio de Venta</th>
+                        <th> Fecha y Hora </th>
+                        <th> Monto </th>
                         <th>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
 
-                     {% for promo in promos %}
+                     {% for venta in ventas %}
 
                         <tr>
-                          <td>{{ promo.codigo}}</td>
-                          <td>{{ promo.get_detalle_full }}</td>
-                          <td>{{ promo.precio }}</td>
+                          <td>{{ venta.fecha_hora }}</td>
+                          <td>{{ venta.get_total }}</td>
                           <td class="text-right">
-                                  <a href="{{ promo.get_update_url }}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span></a>
+                                  <a href="{{ venta.get_absolute_url }}" class="btn btn-success"><span class="glyphicon glyphicon-eye-open"></span></a>
                           </td>
 
                         </tr>
                      {% endfor %}
-
-                     {% for mercaderia in mercaderias %}
-
-                        <tr>
-                          <td>{{ mercaderia.codigo}}</td>
-                          <td>{{ mercaderia.descripcion }}</td>
-                          <td>{{ mercaderia.precio_venta }}</td>
-                          <td class="text-right">
-                                  <a href="{{ mercaderia.get_update_url }}" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span></a>
-                          </td>
-
-                        </tr>
-                      {% endfor %}
                     </tbody>
 
                   </table>

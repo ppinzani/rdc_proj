@@ -54,7 +54,13 @@ urlpatterns = [
 
     re_path(
         r'^promos/(?P<pk>[\w-]+)/$',
-        view=views.DetallePromo.as_view,
+        view=views.PromoDetalle.as_view(),
         name='detalle_promo'
+    ),
+
+    re_path(
+        r'^promos/imprimir-codigos$',
+        view=views.ImprimirCodigos.as_view(),
+        name='imprimir_codigos'
     ),
 ]
