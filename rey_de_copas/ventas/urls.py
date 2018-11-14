@@ -25,9 +25,15 @@ urlpatterns = [
     ),
 
     re_path(
-        r'^detalle_by_codigo/(?P<codigo>[\w-]+)/$',
-        views.detalle_by_codigo,
-        name='detalle_by_codigo'
+        r'^mercaderia_by_codigo/(?P<codigo>[\d]+)/$',
+        views.mercaderia_by_codigo,
+        name='mercaderia_by_codigo'
+    ),
+
+    re_path(
+        r'^(?P<pk>[\d]+)/borrar$',
+        view=views.BorrarVenta.as_view(),
+        name='borrar'
     ),
 
     re_path(
@@ -35,5 +41,4 @@ urlpatterns = [
         view=views.VentaDetalle.as_view(),
         name='detalle'
     ),
-
 ]

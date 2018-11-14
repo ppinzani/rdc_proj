@@ -1,5 +1,11 @@
 {% extends "stock/base_stock.html" %}
 {% block title %}Cargar Stock{% endblock title %}
+{% block css %}
+  {{ block.super }}
+
+  <link rel="stylesheet" href="/static/css/mercaderia_autocomplete.css" type="text/css"></link>
+
+{% endblock css %}
 {% block content %}
 {% include "nav.html" %}
 {% block producto %}
@@ -36,33 +42,31 @@
               </div><!-- col -->
               </div> <!-- row -->
 
-              <div class="row">
-                      <div class="col-lg-12">
-                        <form class="form-horizontal" id="form-cargar-stock" action="javascript:myFunction(); return false;">
-                            <!-- {% csrf_token %} -->
-                            <div class="row">
-
-                                <div class="col-xs-12 col-sm-10">
-
-                                    <div class="form-group has-success has-feedback  {% if form.codigo.errors %} has-error {% endif %}">
-                                        <label class="control-label col-sm-2" for="inputSuccess3">{{ form.codigo.label_tag }}</label>
-                                        <div class="col-sm-6">
-                                            <input type="text" name="codigo" class="form-control" id="codigo_form" data-toggle="tooltip" data-placement="top" title='{{ form.codigo.errors.as_text}}' autofocus='true' >
-                                        </div>
-                                    </div>
-
-
-                                </div> <!-- col -->
-                            </div> <!--<div class="row"> -->
-                        </form>
-                      </div>
-                    </div><!--/.row-->
-
-
-
             </div><!-- /.box-header -->
               <div class="box-body">
-                <table id="tabla_stock" class="table table-bordered table-striped">
+
+                <div class="row">
+                    <div class="form-group has-success has-feedback ">
+                        <label class="control-label col-sm-2 col-lg-2" for="inputSuccess3" style="margin-left: 10px">Código de Barras</label>
+                        <div class="col-sm-6 col-lg-6" style="padding-left: 5px">
+                            <input type="text" name="barcode" class="form-control" id="codigo_form" data-toggle="tooltip" data-placement="top" autofocus='true' >
+                        </div>
+                    </div>
+                </div> <!--<div class="row"> -->
+
+                <div class="row" style="margin-top: 10px">
+                    <div class="form-group has-success has-feedback" >
+                        <label class="control-label col-sm-2 col-lg-2" for="inputSuccess3" style="margin-left: 10px"> Nombre  </label>
+                        <div class="autocomplete col-sm-6 col-lg-6" style="padding-left: 5px">
+                            <input type="text" id="myInput" name="descripcion" class="form-control" data-toggle="tooltip" data-placement="top" autofocus='true' autocomplete="off">
+                        </div> <!-- col -->
+                        <div class="btn btn-success" id="agregar-item"><span class="glyphicon glyphicon-plus"></span></div>
+                    </div>
+                </div> <!-- row -->
+
+
+
+                <table id="tabla_stock" class="table table-bordered table-striped" style="margin-top:20px">
                     <thead>
                      <tr>
                         <th>Código</th>
@@ -107,7 +111,19 @@
 {% endblock content %}
 {% block js %}
     {{ block.super }}
+
+    <!-- Autocomplete form -->
+    <script src="/static/js/autocomplete.js"></script>
+
+
+
     <script>
+        var options_dict =  {{ options_dict | safe}};
+        var options = Object.keys(options_dict);
+        autocomplete(document.getElementById("myInput"), options);
+
+        console.log(options_dict);
+
         $(document).ready(function() {
             var edicion_prev_val;
             // Logica para cargar stock en el form
@@ -199,11 +215,32 @@
                     //dataType : "json",
                     success: function( data ){
                         // do something
-                        $("#save_button").hide();
-                        $("#footer_pagina").append('<h5> Stock cargado correctamente!</h5>');
+                        window.location.replace("{% url 'stock:lista'%}");
                     }
                 });
             });
+
+
+            $("#agregar-item").click(function(){
+                var submitted_mercaderia;
+                var url ;
+
+                codigo_mercaderia = options_dict[$("#myInput").val()];
+                url = "/stock/mercaderia_by_codigo/" + codigo_mercaderia + "/";
+                console.log(codigo_mercaderia);
+
+                $.get(url, function(data, status){
+                  if(data.length == 0){
+                    alert("Código no encontrado. Agregar la mercaderia a la Base de datos");
+                    $("#myInput").val("");
+                  }
+                  else {
+                    $("#tabla_stock tbody").append(data);
+                    $("#myInput").val("");
+                  }
+                });
+
+                });
 
 
         });

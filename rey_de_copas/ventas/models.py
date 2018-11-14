@@ -85,4 +85,18 @@ class Venta(models.Model):
 	def get_absolute_url(self):
 		return reverse('ventas:detalle', args=(self.id,))
 
+	def get_delete_url(self):
+		return reverse('ventas:borrar', args=(self.id,))
+
+	def delete(self, *args, **kwargs):
+		for detalle in self.detalledeventa_set.all():
+			if detalle.mercaderia:
+				detalle.mercaderia.stock.stock += detalle.cantidad
+				detalle.mercaderia.stock.save()
+			elif detalle.promo:
+				for dp in detalle.promo.detallepromo_set.all():
+					dp.mercaderia.stock.stock += (dp.cantidad * detalle.cantidad)
+					dp.mercaderia.stock.save()
+		return super(Venta, self).delete(*args, **kwargs)
+
 

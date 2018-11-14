@@ -28,15 +28,21 @@ def get_env_variable(var_name):
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
+ENV_ROLE = get_env_variable('ENV_ROLE')
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = get_env_variable('RDC_SECRET_KEY')
+
 SECRET_KEY = '9l4xc#742da#2e2htjj4*(b#uw%odsw-!$qii2$5yq7$$10cco'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+DEBUG = False
+RDC_DB_PASS = False
+if ENV_ROLE == 'development':
+    DEBUG = True
+    RDC_DB_PASS = get_env_variable('RDC_DB_PASS')
+    ALLOWED_HOSTS = ['192.168.1.21', '127.0.0.1']
 
 # Application definition
 
@@ -92,7 +98,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'rey_de_copas',
         'USER': 'postgres',
-        'PASSWORD': '258456',
+        'PASSWORD': RDC_DB_PASS,
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
@@ -146,3 +152,10 @@ STATICFILES_DIRS = (
 
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
 MEDIA_URL = '/media/'
+
+if ENV_ROLE == 'production':
+    import dj_database_url
+    DATABASES['default'] =  dj_database_url.config()
+    ALLOWED_HOSTS = ['*']
+    CSFR_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True

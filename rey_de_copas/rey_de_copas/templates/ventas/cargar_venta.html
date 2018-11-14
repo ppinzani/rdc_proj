@@ -1,5 +1,11 @@
 {% extends "ventas/base_ventas.html" %}
 {% block title %}Cargar Venta{% endblock title %}
+{% block css %}
+  {{ block.super }}
+
+  <link rel="stylesheet" href="/static/css/mercaderia_autocomplete.css" type="text/css"></link>
+
+{% endblock css %}
 {% block content %}
 {% include "nav.html" %}
 {% block producto %}
@@ -41,24 +47,26 @@
 
               <div class="box-body">
 
-                <div class="row">
-                      <div class="col-lg-12">
                             <!-- {% csrf_token %} -->
-                            <div class="row">
+                <div class="row">
+                    <div class="form-group has-success has-feedback ">
+                        <label class="control-label col-sm-2 col-lg-2" for="inputSuccess3" style="margin-left: 10px">Código de Barras</label>
+                        <div class="col-sm-6 col-lg-6" style="padding-left: 5px">
+                            <input type="text" name="barcode" class="form-control" id="codigo_form" data-toggle="tooltip" data-placement="top" autofocus='true' >
+                        </div>
+                    </div>
+                </div> <!--<div class="row"> -->
 
-                                <div class="col-xs-12 col-sm-10">
-                                    <div class="form-group has-success has-feedback ">
-                                        <label class="control-label col-sm-2" for="inputSuccess3">Código de Barras</label>
-                                        <div class="col-sm-6">
-                                            <input type="text" name="barcode" class="form-control" id="codigo_form" data-toggle="tooltip" data-placement="top" autofocus='true' >
-                                        </div>
-                                    </div>
+                <div class="row" style="margin-top: 10px">
+                    <div class="form-group has-success has-feedback" >
+                        <label class="control-label col-sm-2 col-lg-2" for="inputSuccess3" style="margin-left: 10px"> Nombre  </label>
+                        <div class="autocomplete col-sm-6 col-lg-6" style="padding-left: 5px">
+                            <input type="text" id="myInput" name="descripcion" class="form-control" data-toggle="tooltip" data-placement="top" autofocus='true' autocomplete="off">
+                        </div> <!-- col -->
+                        <div class="btn btn-success" id="agregar-item"><span class="glyphicon glyphicon-plus"></span></div>
+                    </div>
+                </div> <!-- row -->
 
-
-                                </div> <!-- col -->
-                            </div> <!--<div class="row"> -->
-                      </div>
-              </div><!--/.row-->
 
               <form class="form-horizontal" method="post">
               {% csrf_token %}
@@ -88,9 +96,15 @@
 
                               <tr class = "{% if forloop.first %} hidden {% endif %} dynamic-form" id="{{ form.prefix }}-row">
                                 <td>{{ form.codigo }}</td>
-                                <td>{{ form.cantidad }}</td>
+                                <td>
+                                  {{ form.cantidad }}
+                                  {{ form.cantidad.errors }}
+                                </td>
                                 <td>{{ form.detalle }} </td>
-                                <td>{{ form.precio_unitario }}</td>
+                                <td>
+                                  {{ form.precio_unitario }}
+                                  {{ form.precio_unitario.errors }}
+                                </td>
                                 <td> <p class="detalle_subt" id="id_{{ form.prefix }}-subtotal"> </p></td>
                                 <td class="text-right">
                                         <div class="btn btn-danger eliminar-row"><span class="glyphicon glyphicon-trash"></span></div>
@@ -101,8 +115,20 @@
 
                     </table>
                     {{ formset.management_form }}
+                    {% if detalle_formset.non_form_errors %}
+                      {% for error in detalle_formset.non_form_errors %}
+                          {{ error|escape }}
+                      {% endfor %}
+                    {% endif %}
                   </div> <!-- Col -->
                 </div> <!-- Row -->
+
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
 
                   <div class="row" style="margin-top: 15px">
                   <div class="col-xs-6">
@@ -142,6 +168,9 @@
     <!-- Dynamic formset -->
     <script src="/static/js/dynamic_formset.js"></script>
 
+    <!-- Autocomplete form -->
+    <script src="/static/js/autocomplete.js"></script>
+
 
     <script>
         function calcular_total(){
@@ -156,12 +185,16 @@
           $("#total_venta").text(total.toFixed(2));
         }
 
+        var options_dict =  {{ options_dict | safe}};
+        var options = Object.keys(options_dict);
+        autocomplete(document.getElementById("myInput"), options);
+
         $(document).ready(function() {
 
             // Logica para cargar stock en el form
             $("#codigo_form").change(function(){
                 var codigo_from_form = $("#codigo_form").val();
-                var url = "/ventas/detalle_by_codigo/" + codigo_from_form + "/";
+                var url = "/ventas/mercaderia_by_codigo/" + codigo_from_form + "/";
 
                 $.get(url, function(data, status){
                   if(data.length == 0){
@@ -193,6 +226,7 @@
               var subtotal = $(this).val() * $("#" + prefix + "cantidad").val();
 
               $("p#" + prefix + "subtotal").text(subtotal.toFixed(2));
+              calcular_total();
             });
 
             $("#tabla_venta").on("keypress", ".precio-unitario", function(event){
@@ -202,6 +236,7 @@
                     var subtotal = $(this).val() * $("#" + prefix + "cantidad").val();
 
                     $("p#" + prefix + "subtotal").text(subtotal.toFixed(2));
+                    calcular_total();
                 }
             });
 
@@ -210,6 +245,7 @@
               var subtotal = $(this).val() * $("#" + prefix + "precio_unitario").val();
 
               $("p#" + prefix + "subtotal").text(subtotal.toFixed(2));
+              calcular_total();
             });
 
             $("#tabla_venta").on("keypress", ".cantidad", function(event){
@@ -219,6 +255,7 @@
                     var subtotal = $(this).val() * $("#" + prefix + "precio_unitario").val();
 
                     $("p#" + prefix + "subtotal").text(subtotal.toFixed(2));
+                    calcular_total();
                 }
             });
 
@@ -228,8 +265,42 @@
               calcular_total();
             });
 
+            //Form nombre producto
+            $("#agregar-item").click(function(){
+                var submitted_mercaderia;
+                var url ;
+
+                codigo_mercaderia = options_dict[$("#myInput").val()];
+                url = "/ventas/mercaderia_by_codigo/" + codigo_mercaderia + "/";
+                //console.log(submitted_mercaderia);
+
+
+                $.get(url, function(data, status){
+                  if(data.length == 0){
+                    alert("Código no encontrado. Agregar la mercaderia a la Base de datos");
+                    $("#myInput").val("");
+                  }
+                  else {
+                    addForm('form');
+                    var my_data = JSON.parse(data);
+                    var crntIndex = parseInt($('#id_form-TOTAL_FORMS').val()) - 1;
+
+                    // Set form fields
+                    $("#id_form-" + crntIndex + "-codigo").val(my_data["codigo"]);
+                    $("#id_form-" + crntIndex + "-cantidad").val(my_data["cantidad"]);
+                    $("#id_form-" + crntIndex + "-detalle").val(my_data["descripcion"]);
+                    $("#id_form-" + crntIndex + "-precio_unitario").val(my_data["precio_unitario"]);
+                    $("p#id_form-" + crntIndex + "-subtotal").text(my_data["precio_unitario"]);
+
+                    calcular_total();
+
+                    $("#myInput").val("");
+                  }
+
+                });
+
+            });
 
         });
-
     </script>
 {% endblock js%}

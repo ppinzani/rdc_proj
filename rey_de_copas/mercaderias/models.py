@@ -13,7 +13,7 @@ from stock.models import Stock
 # Create your models here.
 class Mercaderia(models.Model):
     codigo = models.CharField(unique=True, max_length=50)
-    descripcion = models.CharField(max_length=100)
+    descripcion = models.CharField(unique=True, max_length=100)
     precio_compra = models.DecimalField(
         max_digits=6,
         decimal_places=2,

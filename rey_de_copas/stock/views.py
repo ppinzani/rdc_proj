@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 
+import json
+
 from .forms import CargaStockForm
 from mercaderias.models import Mercaderia
 from .models import Stock
@@ -42,8 +44,12 @@ def cargar_stock(request):
 	else:
 		carga_form = CargaStockForm()
 
+	mercaderias_options = {m.descripcion: m.codigo for m in Mercaderia.objects.all()}
+	mercaderias_options = json.dumps(mercaderias_options)
+
 	variables = {
-		'form': carga_form
+		'form': carga_form,
+		'options_dict': mercaderias_options
 	}
 
 	template = 'stock/cargar_stock.html'

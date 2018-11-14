@@ -1,13 +1,14 @@
 import json
 
 from django.shortcuts import render, redirect, reverse
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
 from django.core.exceptions import EmptyResultSet
 from django.forms import formset_factory
+from django.contrib import messages
 
 from mercaderias.models import Mercaderia, Promo
 from .models import DetalleDeVenta, Venta
@@ -89,14 +90,6 @@ def venta_cru(request):
     if request.method == "GET":
         formset = DetalleFormset()
 
-        template = 'ventas/cargar_venta.html'
-
-        variables = {
-            "formset": formset,
-        }
-
-        return render(request, template, variables)
-
     elif request.method == "POST":
         formset = DetalleFormset(request.POST)
 
@@ -137,11 +130,28 @@ def venta_cru(request):
                 except IntegrityError:
                     DetalleDeVenta.objects.filter(venta=venta).delete()
                     venta.delete()
-                    return HttpResponse(status=200)  # FIXME
+                    messages.error(
+                        request,
+                        "Error Grabando la promo, Intente de Nuevo"
+                    )
+
+    mercaderias_options = {m.descripcion: m.codigo for m in Mercaderia.objects.all()}
+    promos_options = {p.get_detalle_full(): p.codigo for p in Promo.objects.all()}
+    mercaderias_options.update(promos_options)
+    mercaderias_options = json.dumps(mercaderias_options)
+
+    template = 'ventas/cargar_venta.html'
+
+    variables = {
+        "formset": formset,
+        "options_dict": mercaderias_options,
+    }
+
+    return render(request, template, variables)
 
 
 @login_required
-def detalle_by_codigo(request, codigo):
+def mercaderia_by_codigo(request, codigo):
     if request.method == 'GET':
 
         try:
@@ -173,3 +183,10 @@ class VentaDetalle(LoginRequiredMixin, DetailView):
         data = super().get_context_data(**kwargs)
         data['detalles'] = data['venta'].detalledeventa_set.all()
         return data
+
+
+class BorrarVenta(LoginRequiredMixin, DeleteView):
+    model = Venta
+    template_name = 'ventas/eliminar_venta.html'
+    success_url = '/ventas/'
+    redirect_field_name = '/'
