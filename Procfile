@@ -1,1 +1,1 @@
-web: python manage.py collectstatic; cd rey_de_copas && gunicorn  --env DJANGO_SETTINGS_MODULE=rey_de_copas.settings rey_de_copas.wsgi
+web: python manage.py collectstatic --noinput; cd rey_de_copas && gunicorn  --env DJANGO_SETTINGS_MODULE=rey_de_copas.settings rey_de_copas.wsgi
