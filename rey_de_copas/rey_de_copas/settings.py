@@ -154,7 +154,7 @@ STATICFILES_DIRS = (
     os.path.join(PROJECT_ROOT, 'static'),
 )
 
-AWS_ACCESS_KEY_ID = get_env_variable('AWS_ACCES_KEY_ID')
+AWS_ACCESS_KEY_ID = get_env_variable('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = get_env_variable('AWS_SECRET_ACCESS_KEY')
 S3_BUCKET_NAME = get_env_variable('S3_BUCKET_NAME')
 AWS_S3_CUSTOM_DOMAIN = 'https://%s.s3.amazonaws.com/' % S3_BUCKET_NAME
