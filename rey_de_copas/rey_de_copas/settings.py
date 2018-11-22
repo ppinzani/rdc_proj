@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'mercaderias.apps.MercaderiasConfig',
     'stock.apps.StockConfig',
     'ventas.apps.VentasConfig',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -153,10 +154,19 @@ STATICFILES_DIRS = (
     os.path.join(PROJECT_ROOT, 'static'),
 )
 
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
-MEDIA_URL = '/media/'
+AWS_ACCESS_KEY_ID = get_env_variable('AWS_ACCES_KEY_ID')
+AWS_SECRET_ACCESS_KEY = get_env_variable('AWS_SECRET_ACCESS_KEY')
+S3_BUCKET_NAME = get_env_variable('S3_BUCKET_NAME')
+AWS_S3_CUSTOM_DOMAIN = 'https://%s.s3.amazonaws.com/' % S3_BUCKET_NAME
 
-#STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+
+MEDIA_ROOT = '/media/'
+MEDIA_URL = AWS_S3_CUSTOM_DOMAIN + MEDIA_ROOT
+
+DEFAULT_FILE_STORAGE = 'rey_de_copas.storage_backends.MediaStorage'
 
 if ENV_ROLE == 'production':
     import dj_database_url
