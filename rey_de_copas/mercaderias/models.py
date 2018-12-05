@@ -120,19 +120,19 @@ class Promo(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         self.create_barcode_image()
-        with open(self.get_image_tmp_location()) as file:
-            df = File(file)
-            self.imagen_codigo.save(self.codigo, df)
+        #with open(self.get_image_tmp_location()) as file:
+        #    df = File(file)
+        #    self.imagen_codigo.save(self.codigo, df)
 
         #image_filepath = self.get_barcode_location()
         #if not default_storage.exists(image_filepath):
         #    self.create_barcode_image()
 
-    def delete(self, *args, **kwargs):
-        image_location = self.get_barcode_location()
-        if default_storage.exists(image_location):
-            default_storage.delete(image_location)
-        return super(Promo, self).delete(*args, **kwargs)
+    #def delete(self, *args, **kwargs):
+    #    image_location = self.get_barcode_location()
+    #    if default_storage.exists(image_location):
+    #        default_storage.delete(image_location)
+    #    return super(Promo, self).delete(*args, **kwargs)
 
 
 class DetallePromo(models.Model):
