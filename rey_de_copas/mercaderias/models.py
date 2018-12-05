@@ -6,6 +6,7 @@ from django.db import models
 from django.urls import reverse
 from django.conf import settings
 from django.core.files.storage import default_storage
+from django.core.files import File
 
 from stock.models import Stock
 
@@ -73,6 +74,7 @@ class Promo(models.Model):
     )
     precio = models.DecimalField(max_digits=6, decimal_places=2)
     nombre = models.CharField(max_length=100, blank=True)
+    imagen_codigo = models.FileField(upload_to="barcodes/", null=True)
 
 
     class Meta:
@@ -108,15 +110,23 @@ class Promo(models.Model):
     def get_barcode_location(self):
         return self.get_barcode_image_url().replace(settings.MEDIA_URL, settings.MEDIA_ROOT + "/")
 
+    def get_image_tmp_location(self):
+        return f"/tmp/{self.codigo}.svg"
+
     def create_barcode_image(self):
-        output_filename = self.get_barcode_location()[:-4]
+        output_filename = self.get_image_tmp_location()
         generate("EAN13", self.codigo, output=output_filename)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        image_filepath = self.get_barcode_location()
-        if not default_storage.exists(image_filepath):
-            self.create_barcode_image()
+        self.create_barcode_image()
+        with open(self.get_image_tmp_location()) as file:
+            df = File(file)
+            self.imagen_codigo.save(self.codigo, df)
+
+        #image_filepath = self.get_barcode_location()
+        #if not default_storage.exists(image_filepath):
+        #    self.create_barcode_image()
 
     def delete(self, *args, **kwargs):
         image_location = self.get_barcode_location()

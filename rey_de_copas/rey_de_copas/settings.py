@@ -157,14 +157,19 @@ STATICFILES_DIRS = (
 AWS_ACCESS_KEY_ID = get_env_variable('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = get_env_variable('AWS_SECRET_ACCESS_KEY')
 S3_BUCKET_NAME = get_env_variable('S3_BUCKET_NAME')
-AWS_S3_CUSTOM_DOMAIN = 'https://%s.s3.amazonaws.com/' % S3_BUCKET_NAME
+AWS_S3_CUSTOM_DOMAIN = 'https://s3.us-east-2.amazonaws.com/%s/' % S3_BUCKET_NAME
 
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 
+
 MEDIA_ROOT = '/media/'
-MEDIA_URL = AWS_S3_CUSTOM_DOMAIN + MEDIA_ROOT
+
+if ENV_ROLE == "production":
+    MEDIA_URL = AWS_S3_CUSTOM_DOMAIN + MEDIA_ROOT
+else:
+    MEDIA_URL = "media/"
 
 DEFAULT_FILE_STORAGE = 'rey_de_copas.storage_backends.MediaStorage'
 
