@@ -114,15 +114,15 @@ class Promo(models.Model):
         return f"/tmp/{self.codigo}.svg"
 
     def create_barcode_image(self):
-        output_filename = self.get_image_tmp_location()
+        output_filename = self.get_image_tmp_location()[:-4]
         generate("EAN13", self.codigo, output=output_filename)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.create_barcode_image()
+    #def save(self, *args, **kwargs):
+        #super().save(*args, **kwargs)
+        #self.create_barcode_image()
         #with open(self.get_image_tmp_location()) as file:
         #    df = File(file)
-        #    self.imagen_codigo.save(self.codigo, df)
+        #    self.imagen_codigo.save("new", df)
 
         #image_filepath = self.get_barcode_location()
         #if not default_storage.exists(image_filepath):

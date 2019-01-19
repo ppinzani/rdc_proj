@@ -164,12 +164,14 @@ AWS_S3_OBJECT_PARAMETERS = {
 }
 
 
-MEDIA_ROOT = '/media/'
+##MEDIA_ROOT = 'media/'
+#MEDIA_URL = '/media/'
 
-if ENV_ROLE == "production":
-    MEDIA_URL = AWS_S3_CUSTOM_DOMAIN + MEDIA_ROOT
-else:
-    MEDIA_URL = "media/"
+
+#if ENV_ROLE == "production":
+#MEDIA_URL = AWS_S3_CUSTOM_DOMAIN + MEDIA_ROOT
+#else:
+#    MEDIA_URL = "media/"
 
 DEFAULT_FILE_STORAGE = 'rey_de_copas.storage_backends.MediaStorage'
 
