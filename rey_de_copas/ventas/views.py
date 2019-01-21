@@ -21,6 +21,7 @@ class ListaVentas(LoginRequiredMixin, ListView):
     model = Venta
     template_name = 'ventas/lista_ventas.html'
     context_object_name = 'ventas'
+    queryset = Venta.objects.all().order_by("-fecha_hora")
     redirect_field_name = '/'
 
 
@@ -92,6 +93,7 @@ def venta_cru(request):
 
     elif request.method == "POST":
         formset = DetalleFormset(request.POST)
+        has_error = False
 
         if formset.is_valid():
             venta = Venta.objects.create()
@@ -104,7 +106,17 @@ def venta_cru(request):
                     precio_unit = form.cleaned_data.get('precio_unitario')
 
                     mpa = MercaderiaPromoAdapter(codigo)
-                    mpa.process_stock(cantidad)
+
+                    try:
+                        mpa.process_stock(cantidad)
+                    except IntegrityError as e:
+                        venta.delete()
+                        messages.error(
+                            request,
+                            e.args[0]
+                        )
+                        has_error = True
+
                     if isinstance(mpa.item, Mercaderia):
                         detalles.append(
                             DetalleDeVenta(
@@ -123,17 +135,18 @@ def venta_cru(request):
                                 precio_unitario=precio_unit
                             )
                         )
-            with transaction.atomic():
-                try:
-                    DetalleDeVenta.objects.bulk_create(detalles)
-                    return redirect(reverse("ventas:lista"))
-                except IntegrityError:
-                    DetalleDeVenta.objects.filter(venta=venta).delete()
-                    venta.delete()
-                    messages.error(
-                        request,
-                        "Error Grabando la promo, Intente de Nuevo"
-                    )
+            if not has_error:
+                with transaction.atomic():
+                    try:
+                        DetalleDeVenta.objects.bulk_create(detalles)
+                        return redirect(reverse("ventas:lista"))
+                    except IntegrityError:
+                        DetalleDeVenta.objects.filter(venta=venta).delete()
+                        venta.delete()
+                        messages.error(
+                            request,
+                            "Error Grabando la promo, Intente de Nuevo"
+                        )
 
     mercaderias_options = {m.descripcion: m.codigo for m in Mercaderia.objects.all()}
     promos_options = {p.get_detalle_full(): p.codigo for p in Promo.objects.all()}

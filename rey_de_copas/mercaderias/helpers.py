@@ -1,5 +1,6 @@
 from .models import Promo, Mercaderia
 from django.core.exceptions import EmptyResultSet
+from django.db import IntegrityError
 
 
 class MercaderiaPromoAdapter:
@@ -31,12 +32,18 @@ class MercaderiaPromoAdapter:
 
 	def process_stock(self, cantidad):
 		if isinstance(self.item, Mercaderia):
-			self.item.stock.stock = self.item.stock.stock - cantidad
-			self.item.stock.save()
+			try:
+				self.item.stock.stock = self.item.stock.stock - cantidad
+				self.item.stock.save()
+			except IntegrityError:
+				raise IntegrityError(f"Error: stock de {self.item.descripcion} no puede ser negativo")
 		elif isinstance(self.item, Promo):
-			# Proceso stock de la promo
-			for detalle in self.item.detallepromo_set.all():
-				detalle.mercaderia.stock.stock -= (cantidad * detalle.cantidad)
-				detalle.mercaderia.stock.save()
+				# Proceso stock de la promo
+				for detalle in self.item.detallepromo_set.all():
+					try:
+						detalle.mercaderia.stock.stock -= (cantidad * detalle.cantidad)
+						detalle.mercaderia.stock.save()
+					except IntegrityError:
+						raise IntegrityError(f"Error: stock de {detalle.mercaderia.descripcion} no puede ser negativo")
 
 
