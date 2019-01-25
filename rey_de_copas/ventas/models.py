@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import reverse
+from decimal import Decimal
 
 # Create your models here.
 class DetalleDeVenta(models.Model):
@@ -27,8 +28,14 @@ class DetalleDeVenta(models.Model):
 	)
 
 	precio_unitario = models.DecimalField(
-		max_digits=6,
+		max_digits=9,
 		decimal_places=2,
+	)
+
+	ganancia = models.DecimalField(
+		max_digits=9,
+		decimal_places=2,
+		default=Decimal("0.0"),
 	)
 
 

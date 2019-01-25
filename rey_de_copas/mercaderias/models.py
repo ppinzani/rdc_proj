@@ -16,13 +16,13 @@ class Mercaderia(models.Model):
     codigo = models.CharField(unique=True, max_length=50)
     descripcion = models.CharField(unique=True, max_length=100)
     precio_compra = models.DecimalField(
-        max_digits=6,
+        max_digits=9,
         decimal_places=2,
         blank=True,
         null=True
     )
     precio_venta = models.DecimalField(
-        max_digits=6,
+        max_digits=9,
         decimal_places=2,
         blank=True,
         null=True
@@ -104,6 +104,9 @@ class Promo(models.Model):
     def get_detalle_full(self):
         return f"{self.nombre}({self.get_detalle()})"
 
+    def get_precio_compra(self):
+        return sum((det.get_precio_compra() for det in self.detallepromo_set.all()))
+
     def get_barcode_image_url(self):
         return f"{settings.MEDIA_URL}barcodes/{self.codigo}.svg"
 
@@ -153,3 +156,6 @@ class DetallePromo(models.Model):
 
     def __str__(self):
         return u"{} {}".format(self.cantidad, str(self.mercaderia))
+
+    def get_precio_compra(self):
+        return self.mercaderia.precio_compra * self.cantidad

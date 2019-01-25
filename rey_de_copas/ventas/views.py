@@ -58,7 +58,7 @@ def cargar_venta(request):
                             cantidad=int(cant),
                             venta=venta,
                             mercaderia=mpa.item,
-                            precio_unitario=float(precio)
+                            precio_unitario=float(precio),
                         )
                     )
                 else:
@@ -118,21 +118,25 @@ def venta_cru(request):
                         has_error = True
 
                     if isinstance(mpa.item, Mercaderia):
+                        ganancia = cantidad*(precio_unit - mpa.item.precio_compra)
                         detalles.append(
                             DetalleDeVenta(
                                 cantidad=cantidad,
                                 venta=venta,
                                 mercaderia=mpa.item,
-                                precio_unitario=precio_unit
+                                precio_unitario=precio_unit,
+                                ganancia=ganancia
                             )
                         )
                     else:
+                        ganancia = cantidad*(precio_unit - mpa.item.get_precio_compra())
                         detalles.append(
                             DetalleDeVenta(
                                 cantidad=cantidad,
                                 venta=venta,
                                 promo=mpa.item,
-                                precio_unitario=precio_unit
+                                precio_unitario=precio_unit,
+                                ganancia=ganancia
                             )
                         )
             if not has_error:
