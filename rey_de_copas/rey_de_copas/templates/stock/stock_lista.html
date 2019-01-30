@@ -47,8 +47,11 @@
                           <td>{{ item.mercaderia.descripcion }}</td>
                           <td>{{ item.stock }}</td>
                           <td class="text-right">
-                              <div  class="btn btn-warning btn-editar"><span class="glyphicon glyphicon-pencil"></span></div>
+                              {% if perms.stock.change_stock %}
+                                  <div  class="btn btn-warning btn-editar"><span class="glyphicon glyphicon-pencil"></span></div>
+                              {% endif %}
                           </td>
+
 
                           </tr>
                       {% endfor %}

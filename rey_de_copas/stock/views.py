@@ -33,6 +33,8 @@ def cargar_stock(request):
 
 			for cod,cant in zip(codigos, cantidades):
 				mercaderia = Mercaderia.objects.get(codigo=cod)
+				if int(cant) < 0:
+					return HttpResponse(status=403)
 				if not editar:
 					mercaderia.stock.stock += int(cant)
 				else:
